@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Film } from 'lucide-react';
+import { X, Play, Pause, RotateCcw, Volume2, VolumeX, Maximize, Film, Sliders, Check } from 'lucide-react';
 import { getVideoBlobUrl } from '../utils/indexedDb';
+
+export type VideoPreviewQuality = '1080p' | '720p' | '480p' | '360p' | 'Auto';
 
 interface VideoPreviewModalProps {
   isOpen: boolean;
@@ -9,6 +11,8 @@ interface VideoPreviewModalProps {
   videoFile?: File | null;
   videoUrl?: string;
   moduleTitle: string;
+  initialQuality?: VideoPreviewQuality;
+  onQualityChange?: (quality: VideoPreviewQuality) => void;
 }
 
 export const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
@@ -17,12 +21,15 @@ export const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
   videoSourceType,
   videoFile,
   videoUrl,
-  moduleTitle
+  moduleTitle,
+  initialQuality = '720p',
+  onQualityChange
 }) => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(140);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [selectedQuality, setSelectedQuality] = useState<VideoPreviewQuality>(initialQuality);
   const [resolvedBlobUrl, setResolvedBlobUrl] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
@@ -216,6 +223,28 @@ export const VideoPreviewModal: React.FC<VideoPreviewModalProps> = ({
               >
                 {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
+
+              {/* Quality Switcher Pills */}
+              <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 rounded-lg border border-slate-800">
+                <span className="text-[10px] text-slate-400 font-semibold mr-1">Quality:</span>
+                {(['1080p', '720p', '480p', 'Auto'] as const).map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => {
+                      setSelectedQuality(q);
+                      if (onQualityChange) onQualityChange(q);
+                    }}
+                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-medium transition-colors cursor-pointer ${
+                      selectedQuality === q
+                        ? 'bg-blue-600 text-white font-bold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Certificate } from '../types';
 import { goldSealImage } from '../assets/images';
+import { PolicybazaarLogo } from './PolicybazaarLogo';
 import { Printer, Calendar, Award, CheckCircle, ShieldCheck, Download, ExternalLink } from 'lucide-react';
 
 interface CertificateViewProps {
@@ -145,6 +146,9 @@ export const CertificateView: React.FC<CertificateViewProps> = ({
 
                 {/* Institution Banner */}
                 <div className="mb-4">
+                  <div className="flex justify-center mb-3">
+                    <PolicybazaarLogo size="md" showTagline={true} />
+                  </div>
                   <div className="text-[11px] font-bold tracking-[0.25em] text-blue-800 uppercase mb-1">
                     Motor Insurance Process Quality & Training Academy
                   </div>
@@ -175,6 +179,9 @@ export const CertificateView: React.FC<CertificateViewProps> = ({
                 </div>
                 <div className="text-xs text-slate-500 font-mono mb-6">
                   Employee Code: <span className="font-semibold text-slate-700">{activeCert.employeeCode}</span>
+                  {activeCert.teamLeader && (
+                    <span> · Team Leader: <strong className="text-slate-800">{activeCert.teamLeader}</strong></span>
+                  )}
                 </div>
 
                 {/* Achievement Description */}
@@ -218,10 +225,13 @@ export const CertificateView: React.FC<CertificateViewProps> = ({
 
                   {/* Right: Trainer Signature */}
                   <div className="text-right">
-                    <div className="font-serif italic text-base text-slate-800 border-b border-slate-300 pb-1 mb-1">
-                      {activeCert.trainerSignature || 'Authorized Quality Lead'}
+                    <div className="font-serif italic text-base sm:text-lg font-bold text-slate-900 border-b border-slate-300 pb-1 mb-1">
+                      Suhail Taneja
                     </div>
-                    <div className="text-[10px] font-semibold text-slate-600 uppercase">
+                    <div className="text-xs font-serif italic text-slate-700 leading-tight">
+                      Senior manager Motor sales and service
+                    </div>
+                    <div className="text-[10px] font-semibold text-slate-500 uppercase mt-1 tracking-wider">
                       Process Trainer Signature
                     </div>
                   </div>

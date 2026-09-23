@@ -1,5 +1,6 @@
 import React from 'react';
 import { Share2, Shield, User, Award, SlidersHorizontal, Cloud } from 'lucide-react';
+import { PolicybazaarLogo } from './PolicybazaarLogo';
 
 interface NavbarProps {
   currentTab: 'learner' | 'certificates' | 'trainer';
@@ -19,9 +20,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   isCloudSynced
 }) => {
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Zone 1: Single text element Brand Wordmark */}
+        {/* Zone 1: Policybazaar Logo & App Title */}
         <div className="flex items-center gap-3">
           <a
             href="/"
@@ -29,12 +30,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               e.preventDefault();
               onSelectTab('learner');
             }}
-            className="flex items-center gap-2.5 text-base sm:text-lg font-extrabold tracking-tight text-blue-900 hover:text-blue-800 transition-colors whitespace-nowrap"
+            className="flex items-center gap-3 transition-opacity hover:opacity-95"
           >
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm shadow-blue-500/30">
-              <Shield className="w-4 h-4 fill-white" />
-            </div>
-            <span>Motor Insurance Learning Module</span>
+            <PolicybazaarLogo size="sm" showTagline={true} />
+            <div className="hidden xl:block h-6 w-px bg-slate-200"></div>
+            <span className="hidden xl:inline text-xs font-bold uppercase tracking-wider text-slate-700 bg-slate-100 px-2 py-1 rounded">
+              Motor Insurance Academy
+            </span>
           </a>
 
           {isCloudSynced && (

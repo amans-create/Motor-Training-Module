@@ -107,14 +107,18 @@ export async function saveCertificateToCloud(cert: Certificate): Promise<void> {
 
 export async function batchSaveAttemptsToCloud(attempts: LearnerAttempt[]): Promise<void> {
   try {
-    const batch = writeBatch(db);
-    attempts.forEach(a => {
-      const docRef = doc(db, ATTEMPTS_COL, a.id);
-      batch.set(docRef, a, { merge: true });
-    });
-    await batch.commit();
+    const CHUNK_SIZE = 400;
+    for (let i = 0; i < attempts.length; i += CHUNK_SIZE) {
+      const chunk = attempts.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(db);
+      chunk.forEach(a => {
+        const docRef = doc(db, ATTEMPTS_COL, a.id);
+        batch.set(docRef, a, { merge: true });
+      });
+      await batch.commit();
+    }
   } catch (error) {
-    console.error('Error batch saving to Firestore', error);
+    console.error('Error batch saving attempts to Firestore', error);
   }
 }
 
@@ -134,14 +138,18 @@ export async function fetchRosterFromCloud(): Promise<import('./types').RosterAs
 
 export async function batchSaveRosterToCloud(roster: import('./types').RosterAssociate[]): Promise<void> {
   try {
-    const batch = writeBatch(db);
-    roster.forEach(item => {
-      // Use clean sanitized employeeCode as document ID
-      const docId = item.employeeCode.toUpperCase().replace(/[^A-Z0-9-]/g, '');
-      const docRef = doc(db, ROSTER_COL, docId);
-      batch.set(docRef, item, { merge: true });
-    });
-    await batch.commit();
+    const CHUNK_SIZE = 400;
+    for (let i = 0; i < roster.length; i += CHUNK_SIZE) {
+      const chunk = roster.slice(i, i + CHUNK_SIZE);
+      const batch = writeBatch(db);
+      chunk.forEach((item, idx) => {
+        const cleanCode = item.employeeCode.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+        const docId = cleanCode || `emp-${i + idx}-${Date.now()}`;
+        const docRef = doc(db, ROSTER_COL, docId);
+        batch.set(docRef, item, { merge: true });
+      });
+      await batch.commit();
+    }
   } catch (error) {
     console.error('Error saving roster to Firestore', error);
   }

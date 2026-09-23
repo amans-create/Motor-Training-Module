@@ -3,6 +3,7 @@ import { LearningModule, LearnerProfile, LearnerAttempt, Certificate } from '../
 import { VideoPlayer } from './VideoPlayer';
 import { QuizView } from './QuizView';
 import { CelebrationScoreView } from './CelebrationScoreView';
+import { PolicybazaarLogo } from './PolicybazaarLogo';
 import { BADGES, getBadgeByPoints, recordAttempt, saveCertificate, getLearnerTotalPoints, lookupAssociate } from '../utils/storage';
 import { RosterAssociate } from '../types';
 import { 
@@ -46,7 +47,7 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
   // Login Form State
   const [empCodeInput, setEmpCodeInput] = useState<string>('PB-1042');
   const [nameInput, setNameInput] = useState<string>('Rahul Sharma');
-  const [deptInput, setDeptInput] = useState<string>('Motor Inbound & Claims Advisory');
+  const [teamLeaderInput, setTeamLeaderInput] = useState<string>('Amit Kumar (TL)');
   const [vlookupMatch, setVlookupMatch] = useState<RosterAssociate | null>(null);
 
   // Live VLOOKUP handler on typing e-code
@@ -55,7 +56,7 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
     const match = lookupAssociate(val);
     if (match) {
       setNameInput(match.employeeName);
-      setDeptInput(match.process);
+      setTeamLeaderInput(match.teamLeader || 'Amit Kumar (TL)');
       setVlookupMatch(match);
     } else {
       setVlookupMatch(null);
@@ -68,7 +69,7 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
       const match = lookupAssociate(empCodeInput);
       if (match) {
         setNameInput(match.employeeName);
-        setDeptInput(match.process);
+        setTeamLeaderInput(match.teamLeader || 'Amit Kumar (TL)');
         setVlookupMatch(match);
       }
     }
@@ -126,7 +127,8 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
     const profile: LearnerProfile = {
       employeeCode: empCodeInput.trim().toUpperCase(),
       name: nameInput.trim(),
-      department: deptInput.trim() || 'Motor Inbound Advisory',
+      teamLeader: teamLeaderInput.trim() || 'Amit Kumar (TL)',
+      department: teamLeaderInput.trim() || 'Motor Inbound Advisory',
       totalPoints: 0,
       currentBadgeId: 'badge-1'
     };
@@ -201,13 +203,15 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
     return (
       <div className="max-w-md mx-auto py-8">
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-700 to-indigo-800 p-6 text-white text-center">
-            <div className="w-14 h-14 bg-white/10 backdrop-blur rounded-2xl flex items-center justify-center mx-auto mb-3 border border-white/20">
-              <ShieldCheck className="w-8 h-8 text-blue-200" />
+          {/* Card Top Brand & Header */}
+          <div className="bg-gradient-to-r from-blue-700 via-blue-800 to-indigo-900 p-6 text-white text-center">
+            {/* Attached Policybazaar Official Logo with HAR FAMILY HOGI INSURED Tagline */}
+            <div className="inline-block bg-white p-3 rounded-2xl shadow-md mb-3.5">
+              <PolicybazaarLogo size="md" showTagline={true} />
             </div>
-            <h2 className="text-xl font-bold tracking-tight">Associate Learner Portal</h2>
+            <h2 className="text-xl font-bold tracking-tight">Associate Process Portal</h2>
             <p className="text-xs text-blue-100 mt-1">
-              Enter your Employee Code and Name to begin today's video process module.
+              Enter your E-Code to begin today's video process module.
             </p>
           </div>
 
@@ -240,12 +244,12 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
                 <div className="flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50/80 border border-emerald-200 rounded-lg p-2.5 mt-2 animate-fade-in">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span>
-                    Auto-collated for <strong>{vlookupMatch.employeeName}</strong> · Process: <strong>{vlookupMatch.process}</strong>
+                    Auto-collated for <strong>{vlookupMatch.employeeName}</strong> · Team Leader: <strong>{vlookupMatch.teamLeader}</strong>
                   </span>
                 </div>
               ) : (
                 <span className="text-[11px] text-slate-400 mt-1 block">
-                  Mention your E-Code to automatically auto-collate your Name & Process via live VLOOKUP.
+                  Mention your E-Code to auto-collate your Associate Name & Team Leader via live VLOOKUP.
                 </span>
               )}
             </div>
@@ -260,20 +264,21 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 placeholder="e.g. Rahul Sharma"
-                className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
               />
             </div>
 
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Process / Department
+                Team Leader *
               </label>
               <input
                 type="text"
-                value={deptInput}
-                onChange={(e) => setDeptInput(e.target.value)}
-                placeholder="e.g. Motor Inbound & Claims Advisory"
-                className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+                value={teamLeaderInput}
+                onChange={(e) => setTeamLeaderInput(e.target.value)}
+                placeholder="e.g. Amit Kumar (TL)"
+                className="w-full text-sm bg-slate-50 border border-slate-300 rounded-lg px-3.5 py-2.5 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
               />
             </div>
 
@@ -294,20 +299,33 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
                   onClick={() => {
                     setEmpCodeInput('PB-1042');
                     setNameInput('Rahul Sharma');
+                    setTeamLeaderInput('Amit Kumar (TL)');
                   }}
                   className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors cursor-pointer"
                 >
-                  Rahul Sharma (PB-1042)
+                  PB-1042 (Rahul Sharma)
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setEmpCodeInput('PB-2180');
                     setNameInput('Priya Sundaram');
+                    setTeamLeaderInput('Sneha Kapoor (TL)');
                   }}
                   className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors cursor-pointer"
                 >
-                  Priya Sundaram (PB-2180)
+                  PB-2180 (Priya Sundaram)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmpCodeInput('PB-3055');
+                    setNameInput('Vikram Malhotra');
+                    setTeamLeaderInput('Vikas Chauhan (TL)');
+                  }}
+                  className="px-2.5 py-1 text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors cursor-pointer"
+                >
+                  PB-3055 (Vikram Malhotra)
                 </button>
               </div>
             </div>
@@ -353,8 +371,8 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
                   {activeLearner.employeeCode}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {activeLearner.department} · Motor Insurance Training Track
+              <p className="text-xs text-slate-500 mt-1">
+                Team Leader: <strong className="text-slate-800 font-semibold">{activeLearner.teamLeader || 'Amit Kumar (TL)'}</strong> · Motor Insurance Advisory
               </p>
             </div>
           </div>
@@ -536,6 +554,7 @@ export const LearnerPortal: React.FC<LearnerPortalProps> = ({
                   isLearner={true}
                   onVideoComplete={handleVideoCompleted}
                   isAlreadyCompleted={!!currentAttempt}
+                  initialQuality={selectedModule.videoQuality || '720p'}
                 />
               </div>
 

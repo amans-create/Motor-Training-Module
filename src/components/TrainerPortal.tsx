@@ -27,7 +27,9 @@ import {
   DownloadCloud,
   Users,
   Play,
-  Check
+  Check,
+  Sliders,
+  Film
 } from 'lucide-react';
 import { 
   importAttemptsFromExcel, 
@@ -83,19 +85,22 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
   const [moduleCategory, setModuleCategory] = useState<string>('Motor Claim Advisory & Call Scripting');
   const [moduleDescription, setModuleDescription] = useState<string>('');
   const [dedicatedDate, setDedicatedDate] = useState<string>('2026-09-23');
-  const [trainerName, setTrainerName] = useState<string>('Senior Motor Process Trainer');
+  const [trainerName, setTrainerName] = useState<string>('Suhail Taneja - Senior Manager Motor Sales & Service');
   const [takeawayInputs, setTakeawayInputs] = useState<string[]>([
     'Clearly distinguish parts depreciation from consumable fluids.',
     'Inform policyholders of the 2-claim yearly limit on Zero Dep.',
     'Always quote the mandatory deductible before opening claim.'
   ]);
 
-  // Video Upload State
+  // Video Upload & Quality State
   const [videoSourceType, setVideoSourceType] = useState<'upload' | 'built_in'>('built_in');
   const [uploadedVideoFile, setUploadedVideoFile] = useState<File | null>(null);
   const [uploadedVideoDuration, setUploadedVideoDuration] = useState<number>(140);
   const [videoWarning, setVideoWarning] = useState<string | null>(null);
   const [videoUploadKey, setVideoUploadKey] = useState<string | null>(null);
+  const [videoQuality, setVideoQuality] = useState<'1080p' | '720p' | '480p' | '360p' | 'Auto'>('720p');
+  const [isInlinePreviewOpen, setIsInlinePreviewOpen] = useState<boolean>(true);
+  const [inlinePreviewUrl, setInlinePreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Video Preview Modal State
@@ -192,6 +197,11 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
     setUploadedVideoFile(file);
     setVideoWarning(null);
 
+    // Create object URL for preview beneath upload button
+    const objUrl = URL.createObjectURL(file);
+    setInlinePreviewUrl(objUrl);
+    setIsInlinePreviewOpen(true);
+
     // Calculate duration
     const tempVideo = document.createElement('video');
     tempVideo.preload = 'metadata';
@@ -252,8 +262,11 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
     setModuleCategory('Motor Claim Advisory & Call Scripting');
     setModuleDescription('');
     setDedicatedDate('2026-09-23');
+    setTrainerName('Suhail Taneja - Senior Manager Motor Sales & Service');
     setQuestions(defaultQuestions);
     setUploadedVideoFile(null);
+    setInlinePreviewUrl(null);
+    setVideoQuality('720p');
     setVideoSourceType('built_in');
     setVideoWarning(null);
   };
@@ -265,11 +278,14 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
     setModuleCategory(mod.category);
     setModuleDescription(mod.description);
     setDedicatedDate(mod.dedicatedDate);
-    setTrainerName(mod.trainerName);
+    setTrainerName(mod.trainerName || 'Suhail Taneja - Senior Manager Motor Sales & Service');
     setTakeawayInputs(mod.callKeyTakeaways || []);
     setQuestions(mod.questions);
     setVideoSourceType(mod.videoSource === 'upload' ? 'upload' : 'built_in');
     setUploadedVideoDuration(mod.videoDurationSeconds);
+    if (mod.videoQuality) {
+      setVideoQuality(mod.videoQuality);
+    }
     setActiveTab('create');
   };
 
@@ -307,13 +323,14 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
       category: moduleCategory.trim(),
       description: moduleDescription.trim() || 'Daily process update for motor insurance associates.',
       dedicatedDate,
-      trainerName: trainerName.trim() || 'Process Trainer Lead',
+      trainerName: trainerName.trim() || 'Suhail Taneja - Senior Manager Motor Sales & Service',
       trainerUsername: 'trainer',
       status,
       videoSource: videoSourceType,
       videoUrl: finalVideoUrl,
       videoFileName: finalVideoFileName,
       videoDurationSeconds: uploadedVideoDuration || 140,
+      videoQuality,
       callKeyTakeaways: takeawayInputs.filter(t => t.trim().length > 0),
       questions,
       createdAt: new Date().toISOString(),
@@ -422,8 +439,11 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
     setImportResultNotice(result);
 
     if (result.success) {
+      if (result.roster) {
+        setRosterList(result.roster);
+      }
       setFormFeedback({
-        message: `Successfully imported ${result.importedCount} associate records from Excel to Firebase!`,
+        message: `Successfully imported ${result.importedCount} associate records! Detected E-Code Column: "${result.detectedColumns?.eCodeHeader || 'E-Code'}"`,
         type: 'success'
       });
       if (onRefreshData) {
@@ -456,10 +476,14 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
 
     if (result.success && result.roster) {
       setRosterList(result.roster);
-      // Run test lookup with current test code
-      setTestLookupResult(lookupAssociate(testECode));
+      // Automatically set the test E-Code to the first imported associate
+      if (result.roster.length > 0) {
+        const sampleCode = result.roster[0].employeeCode;
+        setTestECode(sampleCode);
+        setTestLookupResult(result.roster[0]);
+      }
       setFormFeedback({
-        message: `Successfully loaded ${result.importedCount} active associates into master roster and synced to Firebase!`,
+        message: `Successfully loaded ${result.importedCount} active associates! E-Code column: "${result.detectedColumns?.eCodeHeader || 'E-Code'}". All saved to Firebase Firestore.`,
         type: 'success'
       });
       if (onRefreshData) {
@@ -802,51 +826,175 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
             </div>
 
             {videoSourceType === 'upload' && (
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="video/mp4,video/webm,video/ogg,video/quicktime"
-                    onChange={handleVideoFileChange}
-                    className="block w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
-                  />
-                  
-                  {/* Video Preview Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPreviewVideoConfig({
-                        source: 'upload',
-                        file: uploadedVideoFile,
-                        url: videoUploadKey ? `indexeddb:${videoUploadKey}` : undefined,
-                        title: moduleTitle || 'Uploaded Process Video'
-                      });
-                      setIsVideoPreviewOpen(true);
-                    }}
-                    disabled={!uploadedVideoFile && !videoUploadKey}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer shrink-0"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-white" />
-                    <span>Preview Video</span>
-                  </button>
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+                {/* Upload Button Section */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Select Process Video File (MP4 / WebM / QuickTime) *
+                  </label>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      accept="video/mp4,video/webm,video/ogg,video/quicktime"
+                      onChange={handleVideoFileChange}
+                      className="block w-full text-xs text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer bg-white border border-slate-300 rounded-lg p-1.5"
+                    />
+
+                    {/* Quick Modal Preview Launcher */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPreviewVideoConfig({
+                          source: 'upload',
+                          file: uploadedVideoFile,
+                          url: videoUploadKey ? `indexeddb:${videoUploadKey}` : (inlinePreviewUrl || undefined),
+                          title: moduleTitle || 'Uploaded Process Video'
+                        });
+                        setIsVideoPreviewOpen(true);
+                      }}
+                      disabled={!uploadedVideoFile && !videoUploadKey && !inlinePreviewUrl}
+                      className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer shrink-0"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-white" />
+                      <span>Full Preview Modal</span>
+                    </button>
+                  </div>
                 </div>
 
-                {uploadedVideoFile && (
-                  <div className="flex items-center justify-between text-xs text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200">
-                    <span className="font-medium truncate max-w-xs">{uploadedVideoFile.name}</span>
-                    <span className="font-mono text-slate-500">
-                      Duration: {Math.floor(uploadedVideoDuration / 60)}m {uploadedVideoDuration % 60}s
+                {/* OPTION TO CHANGE THE QUALITY (Beneath Upload Button) */}
+                <div className="p-3.5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-2.5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sliders className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs font-bold text-slate-900">
+                        Option to Change Video Stream Quality:
+                      </span>
+                    </div>
+                    <span className="text-[11px] font-mono font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 self-start sm:self-auto">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+                      Quality: {videoQuality === 'Auto' ? 'Auto (Adaptive)' : `${videoQuality} Resolution`}
                     </span>
                   </div>
-                )}
 
-                {videoWarning && (
-                  <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>{videoWarning}</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {(['1080p', '720p', '480p', '360p', 'Auto'] as const).map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => setVideoQuality(q)}
+                        className={`p-2 rounded-lg text-xs font-semibold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 border ${
+                          videoQuality === q
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-sm ring-2 ring-blue-500/20'
+                            : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        <div className="font-bold">{q === 'Auto' ? 'Auto Bitrate' : q}</div>
+                        <div className={`text-[10px] ${videoQuality === q ? 'text-blue-100' : 'text-slate-400'}`}>
+                          {q === '1080p' ? 'Full HD · 4.5M' : q === '720p' ? 'HD (Default)' : q === '480p' ? 'SD · 1.0M' : q === '360p' ? 'Saver · 500K' : 'Dynamic'}
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                )}
+                  <p className="text-[11px] text-slate-500">
+                    Switch quality presets above to set default rendering compression for learner call associates on desktop and low-bandwidth connections.
+                  </p>
+                </div>
+
+                {/* PREVIEW OPTION BENEATH THE UPLOAD BUTTON */}
+                <div className="p-3.5 bg-white border border-slate-200 rounded-xl shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs font-bold text-slate-900">
+                        Preview Option (Beneath Upload Button)
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsInlinePreviewOpen(!isInlinePreviewOpen)}
+                      className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline flex items-center gap-1"
+                    >
+                      {isInlinePreviewOpen ? 'Hide Preview Player' : 'Show Preview Player'}
+                    </button>
+                  </div>
+
+                  {isInlinePreviewOpen && (
+                    <div>
+                      {uploadedVideoFile || inlinePreviewUrl || videoUploadKey ? (
+                        <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                          <div className="relative aspect-video flex items-center justify-center bg-slate-950">
+                            <video
+                              src={inlinePreviewUrl || undefined}
+                              controls
+                              className="w-full h-full object-contain"
+                              playsInline
+                            />
+                          </div>
+
+                          <div className="p-3 bg-slate-900 text-xs text-slate-200 flex flex-wrap items-center justify-between gap-2 border-t border-slate-800">
+                            <div className="flex items-center gap-2 truncate">
+                              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                              <span className="font-semibold text-white truncate">
+                                {uploadedVideoFile?.name || 'Uploaded Process Video File'}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-3 font-mono text-[11px]">
+                              <span className="text-blue-300 font-bold bg-blue-500/20 border border-blue-400/30 px-2 py-0.5 rounded">
+                                {videoQuality} Quality
+                              </span>
+                              <span className="text-slate-400">
+                                Duration: {Math.floor(uploadedVideoDuration / 60)}m {uploadedVideoDuration % 60}s
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-5 border-2 border-dashed border-slate-200 rounded-xl text-center bg-slate-50/70">
+                          <Film className="w-7 h-7 text-slate-400 mx-auto mb-1.5" />
+                          <div className="text-xs font-bold text-slate-800">No Video File Selected Yet</div>
+                          <p className="text-[11px] text-slate-500 max-w-sm mx-auto mt-1 mb-2.5">
+                            Use the upload button above to choose a video, or preview using the pre-loaded Motor Claims interactive simulation.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewVideoConfig({
+                                source: 'built_in',
+                                file: null,
+                                url: 'sample-video-zero-dep',
+                                title: moduleTitle || 'Built-in Process Simulation'
+                              });
+                              setIsVideoPreviewOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-sm transition-colors"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-white" />
+                            <span>Preview Simulation Video Now</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {uploadedVideoFile && (
+                    <div className="flex items-center justify-between text-xs text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                      <span className="font-medium truncate max-w-xs">{uploadedVideoFile.name}</span>
+                      <span className="font-mono text-slate-500">
+                        Duration: {Math.floor(uploadedVideoDuration / 60)}m {uploadedVideoDuration % 60}s
+                      </span>
+                    </div>
+                  )}
+
+                  {videoWarning && (
+                    <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>{videoWarning}</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1170,7 +1318,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
             <div className="flex items-center gap-2 text-blue-900">
               <FileSpreadsheet className="w-4 h-4 text-blue-600 shrink-0" />
               <span>
-                Want to bulk upload associate results? Upload an Excel file with columns: <strong>Employee Code, Associate Name, Module Title, Date, Score</strong>.
+                Want to bulk upload associate results? Upload an Excel file with columns in sequence: <strong>E code, Associate full name, Team leader, Module Title, Date, Score</strong>.
               </span>
             </div>
             <button
@@ -1183,17 +1331,41 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
           </div>
 
           {/* Import Result Notification */}
-          {importResultNotice && importResultNotice.success && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center justify-between">
-              <span>
-                ✅ Successfully parsed and saved <strong>{importResultNotice.importedCount}</strong> records to Firebase Firestore.
-              </span>
-              <button 
-                onClick={() => setImportResultNotice(null)} 
-                className="text-emerald-700 hover:text-emerald-950 font-bold"
-              >
-                ✕
-              </button>
+          {importResultNotice && (
+            <div className={`p-3.5 border rounded-lg text-xs flex flex-col gap-1.5 ${
+              importResultNotice.success
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                : 'bg-rose-50 border-rose-200 text-rose-800'
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="font-semibold">
+                  {importResultNotice.success 
+                    ? `✅ Successfully parsed and saved ${importResultNotice.importedCount} records to Firebase Firestore.` 
+                    : `❌ ${importResultNotice.error}`}
+                </span>
+                <button 
+                  onClick={() => setImportResultNotice(null)} 
+                  className="text-slate-500 hover:text-slate-800 font-bold ml-4 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+              {importResultNotice.success && importResultNotice.detectedColumns && (
+                <div className="text-[11px] text-emerald-700 pl-4 space-y-0.5">
+                  <div className="flex flex-wrap gap-x-4">
+                    <span><strong>E-Code:</strong> {importResultNotice.detectedColumns.eCodeHeader}</span>
+                    <span><strong>Associate Name:</strong> {importResultNotice.detectedColumns.nameHeader}</span>
+                    {importResultNotice.detectedColumns.teamLeaderHeader && (
+                      <span><strong>Team Leader:</strong> {importResultNotice.detectedColumns.teamLeaderHeader}</span>
+                    )}
+                  </div>
+                  {importResultNotice.sampleCodes && importResultNotice.sampleCodes.length > 0 && (
+                    <div className="font-mono text-emerald-800 mt-1">
+                      <strong>Sample Codes:</strong> {importResultNotice.sampleCodes.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1252,8 +1424,9 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                  <th className="p-3">Emp Code</th>
-                  <th className="p-3">Associate Name</th>
+                  <th className="p-3">E-Code</th>
+                  <th className="p-3">Associate Full Name</th>
+                  <th className="p-3">Team Leader</th>
                   <th className="p-3">Module</th>
                   <th className="p-3">Dedicated Date</th>
                   <th className="p-3">Video Watched</th>
@@ -1266,38 +1439,47 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
               <tbody className="divide-y divide-slate-100">
                 {filteredAttempts.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-slate-500">
+                    <td colSpan={10} className="p-8 text-center text-slate-500">
                       No associate records match the selected date ({filterDate}) or filter.
                     </td>
                   </tr>
                 ) : (
-                  filteredAttempts.map((att) => (
-                    <tr key={att.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3 font-mono font-semibold text-blue-700">{att.employeeCode}</td>
-                      <td className="p-3 font-semibold text-slate-900">{att.learnerName}</td>
-                      <td className="p-3 text-slate-600 max-w-[200px] truncate">{att.moduleTitle}</td>
-                      <td className="p-3 font-mono text-slate-600">{att.dedicatedDate}</td>
-                      <td className="p-3 font-mono text-emerald-600 font-semibold">
-                        {Math.round(att.videoWatchedRatio * 100)}%
-                      </td>
-                      <td className="p-3 font-mono font-bold text-slate-900 tabular-nums">
-                        {att.score} / {att.totalQuestions} ({att.scorePercentage}%)
-                      </td>
-                      <td className="p-3 font-mono text-amber-600 font-bold tabular-nums">
-                        +{att.pointsEarned}
-                      </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                          att.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                        }`}>
-                          {att.passed ? 'Passed' : 'Review'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-[11px] text-slate-400 font-mono">
-                        {att.completedAt.replace('T', ' ').slice(0, 16)}
-                      </td>
-                    </tr>
-                  ))
+                  filteredAttempts.map((att) => {
+                    const match = lookupAssociate(att.employeeCode);
+                    const tl = att.teamLeader || (match ? match.teamLeader : 'Amit Kumar (TL)');
+                    return (
+                      <tr key={att.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-3 font-mono font-semibold text-blue-700">{att.employeeCode}</td>
+                        <td className="p-3 font-semibold text-slate-900">{att.learnerName}</td>
+                        <td className="p-3 text-slate-700">
+                          <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-900 rounded text-[11px] font-medium">
+                            {tl}
+                          </span>
+                        </td>
+                        <td className="p-3 text-slate-600 max-w-[200px] truncate">{att.moduleTitle}</td>
+                        <td className="p-3 font-mono text-slate-600">{att.dedicatedDate}</td>
+                        <td className="p-3 font-mono text-emerald-600 font-semibold">
+                          {Math.round(att.videoWatchedRatio * 100)}%
+                        </td>
+                        <td className="p-3 font-mono font-bold text-slate-900 tabular-nums">
+                          {att.score} / {att.totalQuestions} ({att.scorePercentage}%)
+                        </td>
+                        <td className="p-3 font-mono text-amber-600 font-bold tabular-nums">
+                          +{att.pointsEarned}
+                        </td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            att.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                          }`}>
+                            {att.passed ? 'Passed' : 'Review'}
+                          </span>
+                        </td>
+                        <td className="p-3 text-[11px] text-slate-400 font-mono">
+                          {att.completedAt.replace('T', ' ').slice(0, 16)}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -1305,7 +1487,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
 
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>Showing {filteredAttempts.length} of {attempts.length} total attempts</span>
-            <span>Formatted for Excel / Google Sheets Raw Import</span>
+            <span>Formatted for Excel / Google Sheets Raw Import (Sequence: E code, Associate full name, Team leader)</span>
           </div>
         </div>
       )}
@@ -1327,7 +1509,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
-                Upload your active employee master list in Excel (.xlsx, .xls, .xlsb binary, .csv). When any associate types their <strong>E-Code</strong> in the learner portal, their <strong>Full Name</strong> and <strong>Process</strong> are instantly auto-collated via real-time VLOOKUP.
+                Upload your active employee master list in Excel (.xlsx, .xls, .xlsb binary, .csv). Columns in sequence: <strong>E code, Associate full name, Team leader</strong>. When any associate enters their <strong>E-Code</strong> in the learner portal, their <strong>Associate Full Name</strong> and <strong>Team Leader</strong> are instantly auto-collated via real-time VLOOKUP.
               </p>
             </div>
 
@@ -1364,29 +1546,46 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
 
           {/* Roster Import Notice */}
           {rosterImportNotice && (
-            <div className={`p-4 rounded-xl text-xs flex items-center justify-between border ${
+            <div className={`p-4 rounded-xl text-xs flex flex-col gap-2 border ${
               rosterImportNotice.success
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : 'bg-rose-50 text-rose-800 border-rose-200'
             }`}>
-              <div className="flex items-center gap-2">
-                {rosterImportNotice.success ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                )}
-                <span>
-                  {rosterImportNotice.success 
-                    ? `Successfully imported and mapped ${rosterImportNotice.importedCount} active associates to Firebase Firestore.` 
-                    : rosterImportNotice.error}
-                </span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {rosterImportNotice.success ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  )}
+                  <span className="font-semibold">
+                    {rosterImportNotice.success 
+                      ? `Successfully imported and mapped ${rosterImportNotice.importedCount} active associates to Firebase Firestore!` 
+                      : rosterImportNotice.error}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setRosterImportNotice(null)}
+                  className="text-slate-500 hover:text-slate-800 font-bold ml-4 cursor-pointer"
+                >
+                  ✕
+                </button>
               </div>
-              <button 
-                onClick={() => setRosterImportNotice(null)}
-                className="text-slate-500 hover:text-slate-800 font-bold ml-4"
-              >
-                ✕
-              </button>
+
+              {rosterImportNotice.success && rosterImportNotice.detectedColumns && (
+                <div className="pl-6 text-[11px] space-y-1 text-emerald-700">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    <span><strong>E-Code Column:</strong> {rosterImportNotice.detectedColumns.eCodeHeader}</span>
+                    <span><strong>Associate Name Column:</strong> {rosterImportNotice.detectedColumns.nameHeader}</span>
+                    <span><strong>Team Leader Column:</strong> {rosterImportNotice.detectedColumns.teamLeaderHeader || 'Team Leader'}</span>
+                  </div>
+                  {rosterImportNotice.sampleCodes && rosterImportNotice.sampleCodes.length > 0 && (
+                    <div className="text-[11px] text-emerald-800 font-mono mt-1">
+                      <strong>Sample Detected E-Codes:</strong> {rosterImportNotice.sampleCodes.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
@@ -1432,7 +1631,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                     </span>
                     <span className="text-slate-400">·</span>
                     <span className="text-slate-700">
-                      Process: <strong>{testLookupResult.process}</strong>
+                      Team Leader: <strong>{testLookupResult.teamLeader || 'Amit Kumar (TL)'}</strong>
                     </span>
                     <span className="ml-auto text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
                       ✓ Active Match
@@ -1455,7 +1654,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                   Active Roster Directory ({rosterList.length} Associates)
                 </h4>
                 <span className="text-xs text-slate-400">·</span>
-                <span className="text-xs text-slate-500">Source of truth for learner portal</span>
+                <span className="text-xs text-slate-500">Source of truth for learner portal (Sequence: E code, Associate full name, Team leader)</span>
               </div>
 
               <div className="relative max-w-xs w-full">
@@ -1464,7 +1663,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                   type="text"
                   value={rosterSearchQuery}
                   onChange={(e) => setRosterSearchQuery(e.target.value)}
-                  placeholder="Filter by E-Code, Name, or Process..."
+                  placeholder="Filter by E-Code, Name, or Team Leader..."
                   className="w-full text-xs pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -1477,7 +1676,7 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                     <th className="p-3">#</th>
                     <th className="p-3">E-Code</th>
                     <th className="p-3">Associate Full Name</th>
-                    <th className="p-3">Process / Department</th>
+                    <th className="p-3">Team Leader</th>
                     <th className="p-3">Cloud Status</th>
                     <th className="p-3 text-right">Action</th>
                   </tr>
@@ -1490,7 +1689,8 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                       return (
                         item.employeeCode.toLowerCase().includes(q) ||
                         item.employeeName.toLowerCase().includes(q) ||
-                        item.process.toLowerCase().includes(q)
+                        (item.teamLeader && item.teamLeader.toLowerCase().includes(q)) ||
+                        (item.process ? item.process.toLowerCase().includes(q) : false)
                       );
                     })
                     .map((item, idx) => (
@@ -1498,9 +1698,9 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
                         <td className="p-3 text-slate-400 font-mono">{idx + 1}</td>
                         <td className="p-3 font-mono font-bold text-blue-700">{item.employeeCode}</td>
                         <td className="p-3 font-semibold text-slate-900">{item.employeeName}</td>
-                        <td className="p-3 text-slate-600">
-                          <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded text-[11px]">
-                            {item.process}
+                        <td className="p-3 text-slate-800 font-medium">
+                          <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-900 rounded text-[11px] font-semibold">
+                            {item.teamLeader || 'Amit Kumar (TL)'}
                           </span>
                         </td>
                         <td className="p-3">
@@ -1538,6 +1738,8 @@ export const TrainerPortal: React.FC<TrainerPortalProps> = ({
         videoFile={previewVideoConfig.file}
         videoUrl={previewVideoConfig.url}
         moduleTitle={previewVideoConfig.title}
+        initialQuality={videoQuality}
+        onQualityChange={(q) => setVideoQuality(q)}
       />
     </div>
   );

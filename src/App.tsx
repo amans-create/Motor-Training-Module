@@ -3,7 +3,8 @@ import {
   LearningModule, 
   LearnerProfile, 
   LearnerAttempt, 
-  Certificate 
+  Certificate,
+  RosterAssociate
 } from './types';
 import { 
   getModules, 
@@ -32,6 +33,7 @@ import { LearnerPortal } from './components/LearnerPortal';
 import { TrainerPortal } from './components/TrainerPortal';
 import { CertificateView } from './components/CertificateView';
 import { ShareModal } from './components/ShareModal';
+import { PolicybazaarLogo } from './components/PolicybazaarLogo';
 import { heroImage } from './assets/images';
 import { ShieldCheck, PhoneCall, Award, Users, CheckCircle2, Cloud } from 'lucide-react';
 
@@ -39,6 +41,7 @@ export default function App() {
   const [modules, setModules] = useState<LearningModule[]>([]);
   const [attempts, setAttempts] = useState<LearnerAttempt[]>([]);
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [roster, setRoster] = useState<RosterAssociate[]>([]);
   const [activeLearner, setActiveLearner] = useState<LearnerProfile | null>(null);
   const [isTrainerAuth, setIsTrainerAuthState] = useState<boolean>(false);
   const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
@@ -53,12 +56,14 @@ export default function App() {
     const loadedModules = getModules();
     const loadedAttempts = getAttempts();
     const loadedCertificates = getCertificates();
+    const loadedRoster = getRoster();
     const loadedLearner = getActiveLearner();
     const trainerAuth = getTrainerAuth();
 
     setModules(loadedModules);
     setAttempts(loadedAttempts);
     setCertificates(loadedCertificates);
+    setRoster(loadedRoster);
     setActiveLearner(loadedLearner);
     setIsTrainerAuthState(trainerAuth);
 
@@ -94,6 +99,7 @@ export default function App() {
 
         const cloudRoster = await fetchRosterFromCloud();
         if (cloudRoster && cloudRoster.length > 0) {
+          setRoster(cloudRoster);
           localStorage.setItem('motor_insurance_roster_v1', JSON.stringify(cloudRoster));
         } else {
           // Upload seed roster to cloud
@@ -148,6 +154,7 @@ export default function App() {
     setModules(getModules());
     setAttempts(getAttempts());
     setCertificates(getCertificates());
+    setRoster(getRoster());
   };
 
   const handleLoginLearner = (profile: LearnerProfile) => {
@@ -236,6 +243,11 @@ export default function App() {
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
             <div className="max-w-2xl">
+              {/* Attached Official Brand Logo with Tagline on First Page */}
+              <div className="inline-flex items-center gap-3 bg-white p-2 sm:p-2.5 rounded-xl shadow-lg mb-3 border border-white/20">
+                <PolicybazaarLogo size="sm" showTagline={true} />
+              </div>
+
               <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 tracking-wider uppercase mb-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 <span>Call Center Process Excellence · Motor Insurance Advisory</span>

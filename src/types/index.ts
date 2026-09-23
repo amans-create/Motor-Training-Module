@@ -6,6 +6,17 @@ export interface Question {
   trainerExplanation: string; // Confidential trainer notes
 }
 
+export interface GoogleFlowConfig {
+  isGoogleFlowEnabled: boolean;
+  flowProjectId?: string;
+  flowProjectUrl?: string;
+  arScenarioPrompt?: string;
+  arElements?: string[];
+  arAvatar?: string;
+  arMode?: '3d_inspection' | 'holographic' | 'full_ar';
+  generatedAt?: string;
+}
+
 export interface LearningModule {
   id: string;
   title: string;
@@ -19,6 +30,8 @@ export interface LearningModule {
   videoUrl: string;
   videoFileName?: string;
   videoDurationSeconds: number; // typically 120-180s (2-3 min)
+  videoQuality?: '1080p' | '720p' | '480p' | '360p' | 'Auto';
+  googleFlowConfig?: GoogleFlowConfig;
   callKeyTakeaways: string[];
   questions: Question[]; // Exactly 5 MCQ questions
   createdAt: string;
@@ -29,6 +42,7 @@ export interface LearnerProfile {
   employeeCode: string;
   name: string;
   department: string;
+  teamLeader?: string;
   totalPoints: number;
   currentBadgeId: string;
 }
@@ -40,6 +54,7 @@ export interface LearnerAttempt {
   dedicatedDate: string; // YYYY-MM-DD
   employeeCode: string;
   learnerName: string;
+  teamLeader?: string;
   videoWatchedRatio: number; // 0 to 1 (1.0 = 100%)
   videoCompleted: boolean;
   score: number; // out of 5
@@ -66,6 +81,7 @@ export interface Certificate {
   certificateNumber: string;
   employeeCode: string;
   learnerName: string;
+  teamLeader?: string;
   moduleId: string;
   moduleTitle: string;
   dedicatedDate: string;
@@ -80,6 +96,7 @@ export interface Certificate {
 export interface RosterAssociate {
   employeeCode: string; // e.g. "PB-1042"
   employeeName: string; // e.g. "Rahul Sharma"
-  process: string;      // e.g. "Motor Inbound & Claims Advisory"
+  teamLeader: string;   // e.g. "Amit Kumar (TL)"
+  process?: string;      // backward compatibility
   updatedAt?: string;
 }

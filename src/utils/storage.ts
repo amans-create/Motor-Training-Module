@@ -69,22 +69,22 @@ export function getBadgeByPoints(points: number): Badge {
 const STORAGE_KEYS = {
   MODULES: 'motor_insurance_modules_v1',
   ATTEMPTS: 'motor_insurance_attempts_v1',
-  CERTIFICATES: 'motor_insurance_certificates_v1',
+  CERTIFICATES: 'motor_insurance_certificates_v2',
   ACTIVE_LEARNER: 'motor_insurance_active_learner_v1',
   TRAINER_AUTH: 'motor_insurance_trainer_auth_v1',
-  ROSTER: 'motor_insurance_roster_v1',
+  ROSTER: 'motor_insurance_roster_v2',
 };
 
 export const SEED_ROSTER: RosterAssociate[] = [
-  { employeeCode: 'PB-1042', employeeName: 'Rahul Sharma', process: 'Motor Inbound & Claims Advisory' },
-  { employeeCode: 'PB-2180', employeeName: 'Priya Sundaram', process: 'Motor Renewal & Endorsements' },
-  { employeeCode: 'PB-3055', employeeName: 'Vikram Malhotra', process: 'Commercial Vehicle & Fleet Claims' },
-  { employeeCode: 'PB-4112', employeeName: 'Ananya Verma', process: 'Two-Wheeler Comprehensive Underwriting' },
-  { employeeCode: 'PB-5501', employeeName: 'Arjun Mehta', process: 'Motor Inbound & Claims Advisory' },
-  { employeeCode: 'PB-5502', employeeName: 'Deepika Nair', process: 'Private Car Claims Escalations' },
-  { employeeCode: 'PB-5503', employeeName: 'Karan Joshi', process: 'Motor Retention & Cross-Sell' },
-  { employeeCode: 'PB-6020', employeeName: 'Sneha Patel', process: 'Motor Inbound Advisory' },
-  { employeeCode: 'PB-7789', employeeName: 'Amit Saxena', process: 'Motor Customer Support & Grievance' }
+  { employeeCode: 'PB-1042', employeeName: 'Rahul Sharma', teamLeader: 'Amit Kumar (TL)', process: 'Motor Inbound & Claims Advisory' },
+  { employeeCode: 'PB-2180', employeeName: 'Priya Sundaram', teamLeader: 'Sneha Kapoor (TL)', process: 'Motor Renewal & Endorsements' },
+  { employeeCode: 'PB-3055', employeeName: 'Vikram Malhotra', teamLeader: 'Vikas Chauhan (TL)', process: 'Commercial Vehicle & Fleet Claims' },
+  { employeeCode: 'PB-4112', employeeName: 'Ananya Verma', teamLeader: 'Amit Kumar (TL)', process: 'Two-Wheeler Comprehensive Underwriting' },
+  { employeeCode: 'PB-5501', employeeName: 'Arjun Mehta', teamLeader: 'Rohit Saxena (TL)', process: 'Motor Inbound & Claims Advisory' },
+  { employeeCode: 'PB-5502', employeeName: 'Deepika Nair', teamLeader: 'Sneha Kapoor (TL)', process: 'Private Car Claims Escalations' },
+  { employeeCode: 'PB-5503', employeeName: 'Karan Joshi', teamLeader: 'Vikas Chauhan (TL)', process: 'Motor Retention & Cross-Sell' },
+  { employeeCode: 'PB-6020', employeeName: 'Sneha Patel', teamLeader: 'Rohit Saxena (TL)', process: 'Motor Inbound Advisory' },
+  { employeeCode: 'PB-7789', employeeName: 'Amit Saxena', teamLeader: 'Amit Kumar (TL)', process: 'Motor Customer Support & Grievance' }
 ];
 
 const SEED_MODULES: LearningModule[] = [
@@ -94,13 +94,24 @@ const SEED_MODULES: LearningModule[] = [
     category: 'Claims Advisory & Call Scripting',
     description: 'Critical process update for all motor insurance associates. Understand how to explain parts depreciation, salvage value, and why consumable covers must be paired with Zero Dep on customer calls.',
     dedicatedDate: '2026-09-23',
-    trainerName: 'Process Training Lead (Quality Team)',
+    trainerName: 'Suhail Taneja - Senior Manager Motor Sales & Service',
     trainerUsername: 'trainer',
     status: 'published',
     videoSource: 'built_in',
     videoUrl: 'sample-video-zero-dep',
     videoFileName: 'Zero_Dep_Claim_Process_Update_v2.mp4',
     videoDurationSeconds: 140, // 2 mins 20 seconds
+    videoQuality: '720p',
+    googleFlowConfig: {
+      isGoogleFlowEnabled: true,
+      flowProjectId: 'flow-pb-motor-ar-2026',
+      flowProjectUrl: 'https://flow.google/project/pb-motor-ar-2026',
+      arScenarioPrompt: 'Zero Dep vs Consumables 3D Exploded Engine & Bumper with Interactive Call Script',
+      arElements: ['3D Car Mesh & Damage Hotspots', 'Holographic Claim Teleprompter', 'Interactive AR Checkpoints', 'Spatial 3D Audio'],
+      arAvatar: 'Suhail Taneja (Senior Manager Motor Sales & Service)',
+      arMode: 'full_ar',
+      generatedAt: '2026-09-23T05:50:00.000Z'
+    },
     callKeyTakeaways: [
       'Clarify that Zero Dep eliminates 50% depreciation deductions on plastic/rubber parts.',
       'Explain the difference between parts depreciation vs consumable items (oil, nuts, coolant).',
@@ -444,7 +455,7 @@ const SEED_CERTIFICATES: Certificate[] = [
     score: '5 / 5 (100%)',
     pointsEarned: 500,
     badgeName: 'Motor Insurance Pro',
-    trainerSignature: 'R. K. Verma, Principal Process Trainer'
+    trainerSignature: 'Suhail Taneja'
   },
   {
     id: 'cert-2180-sep',
@@ -459,7 +470,7 @@ const SEED_CERTIFICATES: Certificate[] = [
     score: '4 / 5 (80%)',
     pointsEarned: 400,
     badgeName: 'Policy Advisory Specialist',
-    trainerSignature: 'R. K. Verma, Principal Process Trainer'
+    trainerSignature: 'Suhail Taneja'
   },
   {
     id: 'cert-3055-sep',
@@ -474,7 +485,7 @@ const SEED_CERTIFICATES: Certificate[] = [
     score: '5 / 5 (100%)',
     pointsEarned: 500,
     badgeName: 'Policy Advisory Specialist',
-    trainerSignature: 'A. Sengupta, Head of Motor Underwriting Training'
+    trainerSignature: 'Suhail Taneja'
   }
 ];
 
@@ -593,7 +604,7 @@ export function saveRoster(roster: RosterAssociate[]): void {
 
 /**
  * Live VLOOKUP against active associate roster
- * Matches case-insensitively, trims, and matches both "PB-1042" and "1042" or "PB1042".
+ * Matches case-insensitively, trims, handles prefixes (PB, EMP), numbers, and alphanumeric codes.
  */
 export function lookupAssociate(empCode: string): RosterAssociate | null {
   if (!empCode || !empCode.trim()) return null;
@@ -602,20 +613,47 @@ export function lookupAssociate(empCode: string): RosterAssociate | null {
   const alphanumeric = rawCode.replace(/[^A-Z0-9]/g, '');
 
   const roster = getRoster();
+  if (!roster || roster.length === 0) return null;
 
-  // 1. Exact match
-  const exact = roster.find(r => r.employeeCode.toUpperCase() === rawCode);
+  // 1. Exact match (case-insensitive, trimmed)
+  const exact = roster.find(r => r.employeeCode.trim().toUpperCase() === rawCode);
   if (exact) return exact;
 
-  // 2. Alphanumeric match (ignoring dashes / spaces e.g. "PB1042" == "PB-1042")
-  const alphaMatch = roster.find(r => r.employeeCode.toUpperCase().replace(/[^A-Z0-9]/g, '') === alphanumeric);
+  // 2. Alphanumeric match (ignoring dashes, dots, spaces, underscores e.g. "PB1042" == "PB-1042")
+  const alphaMatch = roster.find(r => {
+    const rAlpha = r.employeeCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    return rAlpha === alphanumeric;
+  });
   if (alphaMatch) return alphaMatch;
 
-  // 3. Digits match if associate just typed e.g. "1042"
-  if (digitsOnly.length >= 3) {
-    const digitMatch = roster.find(r => r.employeeCode.replace(/[^0-9]/g, '') === digitsOnly);
+  // 3. Prefix-independent match:
+  // e.g. user typed "1042" and roster has "PB-1042" or "EMP1042", OR user typed "PB-1042" and roster has "1042"
+  const strippedUser = alphanumeric.replace(/^(PB|EMP|STAFF|USER|AGENT)/, '');
+  const prefixMatch = roster.find(r => {
+    const rAlpha = r.employeeCode.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    const strippedRoster = rAlpha.replace(/^(PB|EMP|STAFF|USER|AGENT)/, '');
+    if (strippedUser && strippedRoster && strippedUser === strippedRoster) {
+      return true;
+    }
+    return false;
+  });
+  if (prefixMatch) return prefixMatch;
+
+  // 4. Digits match if both have 2+ digits
+  if (digitsOnly.length >= 2) {
+    const digitMatch = roster.find(r => {
+      const rDigits = r.employeeCode.replace(/[^0-9]/g, '');
+      return rDigits.length >= 2 && rDigits === digitsOnly;
+    });
     if (digitMatch) return digitMatch;
   }
+
+  // 5. Name match fallback (in case associate typed their name in the e-code box)
+  const nameMatch = roster.find(r => {
+    const rName = r.employeeName.trim().toUpperCase();
+    return rName === rawCode || rName.replace(/[^A-Z0-9]/g, '') === alphanumeric;
+  });
+  if (nameMatch) return nameMatch;
 
   return null;
 }
