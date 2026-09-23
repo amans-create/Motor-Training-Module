@@ -1,0 +1,6 @@
+{
+  "name": "Motor Insurance Learning Module",
+  "description": "Interactive video-gated training and assessment portal for motor insurance process updates, associate quizzes, monthly certificates, and trainer management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "LearningModule": {
+      "collection": "modules",
+      "fields": {
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "dedicatedDate": { "type": "string" },
+        "trainerName": { "type": "string" },
+        "status": { "type": "string" },
+        "videoSource": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "videoDurationSeconds": { "type": "number" },
+        "callKeyTakeaways": { "type": "array" },
+        "questions": { "type": "array" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "LearnerAttempt": {
+      "collection": "attempts",
+      "fields": {
+        "moduleId": { "type": "string" },
+        "moduleTitle": { "type": "string" },
+        "dedicatedDate": { "type": "string" },
+        "employeeCode": { "type": "string" },
+        "learnerName": { "type": "string" },
+        "videoWatchedRatio": { "type": "number" },
+        "score": { "type": "number" },
+        "totalQuestions": { "type": "number" },
+        "scorePercentage": { "type": "number" },
+        "pointsEarned": { "type": "number" },
+        "completedAt": { "type": "string" },
+        "passed": { "type": "boolean" },
+        "certificateId": { "type": "string" }
+      }
+    },
+    "Certificate": {
+      "collection": "certificates",
+      "fields": {
+        "certificateNumber": { "type": "string" },
+        "employeeCode": { "type": "string" },
+        "learnerName": { "type": "string" },
+        "moduleId": { "type": "string" },
+        "moduleTitle": { "type": "string" },
+        "dedicatedDate": { "type": "string" },
+        "monthYear": { "type": "string" },
+        "issueDate": { "type": "string" },
+        "score": { "type": "string" },
+        "pointsEarned": { "type": "number" },
+        "badgeName": { "type": "string" },
+        "trainerSignature": { "type": "string" }
+      }
+    },
+    "RosterAssociate": {
+      "collection": "roster",
+      "fields": {
+        "employeeCode": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "process": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    }
+  }
+}
